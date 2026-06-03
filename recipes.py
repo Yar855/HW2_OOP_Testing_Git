@@ -61,6 +61,34 @@ class Recipe:
         str_ingredients = ', '.join(str(n) for n in self.ingredients)
         return f"{self.title}, ингредиенты: {str_ingredients}"
 
+class ShoppingList:
+    def __init__(self):
+        self._items = []
     
+    def add_recipe(self, recipe: Recipe, portions: float):
+        if portions <= 0:
+            raise ValueError("Количество порций должно быть положительным")
+        for ing in recipe.scale(portions).ingredients:
+            self._items.append((ing, recipe.title))
 
-
+    def remove_recipe(self, title: str):
+        self._items = [pair for pair in self._items if pair[1] != title]
+    
+    def get_list(self):
+        dict_ing = {}
+        for pair in self._items:
+            key = (pair[0].name, pair[0].unit)
+            if key in dict_ing:
+                dict_ing[key] += pair[0].quantity
+            else:
+                dict_ing[key] = pair[0].quantity
+        res = []
+        for (name, unit), quantity in dict_ing.items():
+            res.append(Ingredient(name, quantity, unit))
+        res.sort(key = lambda ing: ing.name)
+        return res
+    
+    def __add__(self, other: ShoppingList):
+        new_list = ShoppingList()
+        new_list._items = self._items + other._items
+        return new_list
